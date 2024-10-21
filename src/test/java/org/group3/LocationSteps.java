@@ -8,8 +8,7 @@ import io.cucumber.java.en.And;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class LocationSteps {
 
@@ -106,5 +105,67 @@ public class LocationSteps {
                 }
         }
 
+
+        @Given("following chargers exists:")
+        public void followingChargersExists(io.cucumber.datatable.DataTable chargerTable) {
+                List<Map<String, String>> rows = chargerTable.asMaps();
+                for (Map<String, String> columns : rows) {
+                        Charger.createCharger(columns.get("ID"),Type.valueOf(columns.get("Type")),Status.valueOf(columns.get("Status")));
+                }
+        }
+
+
+        @Given("location {string} has following chargers:")
+        public void locationHasFollowingChargers(String name, io.cucumber.datatable.DataTable addedChargersTable) {
+                location.addLocation(name, "Dresdnersstrasse 42, Wien",0.25, 0.25,0.25,0.25);
+                List<Map<String, String>> rows = addedChargersTable.asMaps();
+                for (Map<String, String> columns : rows) {
+                        location.addChargerToLocation(name, columns.get("ID"));
+                }
+        }
+
+
+        @When("owner adds the following chargers to {string}:")
+        public void ownerAddsTheFollowingChargers(String name, io.cucumber.datatable.DataTable addChargersTable) {
+                List<Map<String, String>> rows = addChargersTable.asMaps();
+                for (Map<String, String> columns : rows) {
+                    location.addChargerToLocation(name, columns.get("ID"));
+                }
+        }
+
+
+        @Then("location {string} has {int} chargers")
+        public void locationHasChargers(String name, int expectedChargerCount) {
+                List<Charger> chargers = location.getChargersByLocation(name);
+                assertEquals(expectedChargerCount, chargers.size());
+        }
+
+
+        @And("charger with ID {string} is of type {string} and status {string}")
+        public void chargerWithIDIsOfTypeAndStatus(String chargerId, String expectedType, String expectedStatus) {
+                Charger charger = Charger.getChargerById(chargerId);
+                assertEquals(Type.valueOf(expectedType), charger.getType());
+                assertEquals(Status.valueOf(expectedStatus), charger.getStatus());
+        }
+
+        @When("owner removes charger with ID {string} from location {string}")
+        public void ownerRemoveChargerFromLocation(String chargerId, String locationName) {
+                location.removeChargerFromLocation(locationName, chargerId);
+        }
+
+        @Then("charger with ID {string} should not exist at location {string}")
+        public void chargerShouldNotExistAtLocation(String chargerId, String locationName) {
+                List<Charger> chargers = location.getChargersByLocation(locationName);
+
+                boolean chargerExists = chargers.stream()
+                        .anyMatch(charger -> charger.getChargerId().equals(chargerId));
+                assertFalse(chargerExists);
+        }
+
+
+        @When("owner sets status of charger with ID {string} at location {string} to {string}")
+        public void ownerSetsStatusOfChargerWithIDAtLocationTo(String chargerId, String name, String newStatus) {
+                location.setChargerStatusOfLocation(name, chargerId, Status.valueOf(newStatus));
+        }
 
 }

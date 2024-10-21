@@ -7,9 +7,9 @@ import io.cucumber.java.en.When;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Charging {
+public class ChargerSteps {
 
-    private final Map<String, String> chargers = new HashMap<>();  // Store chargers by their IDs
+    private final Map<String, String> chargers = new HashMap<>(); // Store chargers by their IDs
 
     @Given("I have no chargers")
     public void iHaveNoChargers() {

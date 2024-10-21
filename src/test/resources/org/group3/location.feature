@@ -1,4 +1,4 @@
-Feature:
+Feature: Admin Locations
   As owner
   i want do admin locations
   So that clients can use the electric filling station network
@@ -40,7 +40,54 @@ Feature:
     |0.20         |0.10         |0.25         |0.10         |
 
 
+  Scenario: Add chargers to the location
+    Given following chargers exists:
+      |ID       |Type   |Status        |
+      |CHARGER-1|AC     |BESETZT       |
+      |CHARGER-2|DC     |FREI          |
+      |CHARGER-3|AC     |AUSSER_BETRIEB|
+      |CHARGER-4|AC     |FREI          |
+      |CHARGER-5|DC     |FREI          |
+      |CHARGER-6|AC     |FREI          |
+    Given location "Wien Dresdnerstrasse" has following chargers:
+      |ID       |Type   |Status        |
+      |CHARGER-1|AC     |BESETZT       |
+      |CHARGER-2|DC     |FREI          |
+      |CHARGER-3|AC     |AUSSER_BETRIEB|
+    When owner adds the following chargers to "Wien Dresdnerstrasse":
+      |ID       |Type   |Status|
+      |CHARGER-4|AC     |FREI  |
+      |CHARGER-5|DC     |FREI  |
+      |CHARGER-6|AC     |FREI  |
+    Then location "Wien Dresdnerstrasse" has 6 chargers
+    And charger with ID "CHARGER-5" is of type "DC" and status "FREI"
 
 
+  Scenario: Remove a charger from a location
+    Given following chargers exists:
+      | ID        | Type | Status        |
+      | CHARGER-1 | AC   | FREI          |
+      | CHARGER-2 | DC   | BESETZT       |
+      | CHARGER-3 | AC   | AUSSER_BETRIEB|
+    Given location "Wien Dresdnerstrasse" has following chargers:
+      | ID        |
+      | CHARGER-1 |
+      | CHARGER-2 |
+      | CHARGER-3 |
+    When owner removes charger with ID "CHARGER-2" from location "Wien Dresdnerstrasse"
+    Then charger with ID "CHARGER-2" should not exist at location "Wien Dresdnerstrasse"
+    Then location "Wien Dresdnerstrasse" has 2 chargers
 
-  Scenario: Add a Charger to the location
+
+  Scenario: Change the status of a charger at a location
+    Given the following chargers are created:
+      | ID        | Type | Status        |
+      | CHARGER-1 | AC   | FREI          |
+      | CHARGER-2 | DC   | BESETZT       |
+    And location "Wien Hauptbahnhof" has following chargers:
+      | ID        |
+      | CHARGER-1 |
+      | CHARGER-2 |
+    When owner sets status of charger with ID "CHARGER-1" at location "Wien Hauptbahnhof" to "BESETZT"
+    Then charger with ID "CHARGER-1" should have type "AC" and status "BESETZT"
+    And charger with ID "CHARGER-2" should still have status "BESETZT"

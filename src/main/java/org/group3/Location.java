@@ -1,14 +1,16 @@
 package org.group3;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 
 public class Location {
-    private Map<String, Object[]> locations = new HashMap<>();
+    private final Map<String, Object[]> locations = new HashMap<>();
 
     public void addLocation(String name, String address,double pricePerACkwH, double pricePerDCkwH, double priceACMinute, double priceDCMinute) {
-        locations.put(name, new Object[] {address, pricePerACkwH, pricePerDCkwH, priceACMinute, priceDCMinute});
+        locations.put(name, new Object[] {address, pricePerACkwH, pricePerDCkwH, priceACMinute, priceDCMinute, new ArrayList<Charger>()});
     }
 
     public int getLocationCount() {
@@ -106,20 +108,63 @@ public class Location {
         }
     }
 
+    public void addChargerToLocation(String locationName, String chargerId) {
+        Object[] locationData = locations.get(locationName);
+        if (locationData != null) {
+            List<Charger> chargers = (List<Charger>) locationData[5];
+            Charger charger = Charger.getChargerById(chargerId);
+            if (charger != null) {
+                chargers.add(charger);
+            } else {
+                throw new IllegalArgumentException("Charger with ID " + chargerId + " does not exist.");
+            }
+        } else {
+            throw new IllegalArgumentException("Location with name " + locationName + " does not exist.");
+        }
+    }
 
 
+    public List<Charger> getChargersByLocation(String locationName) {
+        Object[] locationData = locations.get(locationName);
+        if (locationData == null) {
+            throw new IllegalArgumentException("Location with name " + locationName + " does not exist.");
+        }
+        return (List<Charger>) locationData[5];
+    }
+
+    public void setChargerStatusOfLocation(String locationName, String chargerId, Status newStatus) {
+        Object[] locationData = locations.get(locationName);
+        if (locationData != null) {
+            List<Charger> chargers = (List<Charger>) locationData[5];
+            for (Charger charger : chargers) {
+                if (charger.getChargerId().equals(chargerId)) {
+                    charger.setStatus(newStatus);
+                    return;
+                }
+            }
+            throw new IllegalArgumentException("Charger with ID " + chargerId + " does not exist at this location.");
+
+        } else {
+            throw new IllegalArgumentException("Location with name " + locationName + " does not exist.");
+        }
+    }
 
 
+    public void removeChargerFromLocation(String locationName, String chargerId) {
+        Object[] locationData = locations.get(locationName);
+        if (locationData != null) {
+            List<Charger> chargers = (List<Charger>) locationData[5];
+            boolean chargerRemoved = chargers.removeIf(charger -> charger.getChargerId().equals(chargerId));
+
+            if (!chargerRemoved) {
+                throw new IllegalArgumentException("Charger with ID " + chargerId + " does not exist at this location.");
+            }
+        } else {
+            throw new IllegalArgumentException("Location with name " + locationName + " does not exist.");
+        }
 
 
-
-
-
-
-
-
-
-
+    }
 
 
 }
