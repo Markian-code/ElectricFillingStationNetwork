@@ -7,6 +7,7 @@ import java.util.UUID;
 public class UserAccounts {
     // Eine Map, um Benutzerkonten mit der Benutzer-ID als Schlüssel zu speichern
     private Map<String, User> userAccounts = new HashMap<>();
+    private String errorMessage; // Um Fehlermeldungen zu erfassen
 
     // Innere Klasse zur Darstellung eines Benutzers
     public class User {
@@ -22,7 +23,7 @@ public class UserAccounts {
             this.prepaidBalance = 0.0; // Initialisiere den Kontostand auf null
         }
 
-        // Getters und Setters
+        // Getter und Setter
         public String getUserId() {
             return userId;
         }
@@ -54,44 +55,64 @@ public class UserAccounts {
 
     // Erstelle ein neues Benutzerkonto
     public User createUser(String name, String email) {
+        if (email == null || email.isEmpty()) {
+            errorMessage = "Email is required"; // Setze Fehlermeldung, wenn die E-Mail ungültig ist
+            return null; // Rückgabe von null, wenn der Benutzer nicht erstellt werden kann
+        }
+
         User newUser = new User(name, email);
         userAccounts.put(newUser.getUserId(), newUser);
-        return newUser; // Return the created user
+        return newUser; // Rückgabe des erstellten Benutzers
     }
 
     // Füge Guthaben zum Prepaid-Konto eines Benutzers hinzu
-    public void addFunds(String userId, double amount) {
+    public String addFunds(String userId, double amount) {
+        if (amount < 0) {
+            errorMessage = "Invalid amount"; // Setze Fehlermeldung, wenn der Betrag ungültig ist
+            return errorMessage;
+        }
+
         User user = userAccounts.get(userId);
         if (user != null) {
-            user.addFunds(amount);
+            user.addFunds(amount); // Füge Guthaben zum Prepaid-Konto des Benutzers hinzu
+            return null; // Rückgabe von null, wenn die Operation erfolgreich ist
         } else {
-            System.out.println("User not found!");
+            return "User not found!"; // Fehlermeldung, wenn der Benutzer nicht gefunden wurde
         }
     }
 
     // Aktualisiere die Benutzerinformationen
-    public void updateUser(String userId, String name, String email) {
+    public String updateUser(String userId, String name, String email) {
         User user = userAccounts.get(userId);
         if (user != null) {
+            if (email == null || email.isEmpty()) {
+                errorMessage = "Email is required"; // Setze Fehlermeldung, wenn die E-Mail ungültig ist
+                return errorMessage;
+            }
             user.setName(name);
             user.setEmail(email);
-            System.out.println("User information updated successfully.");
+            return null; // Rückgabe von null, wenn die Operation erfolgreich ist
         } else {
-            System.out.println("User not found!");
+            return "User not found!"; // Fehlermeldung, wenn der Benutzer nicht gefunden wurde
         }
     }
 
     // Lösche ein Benutzerkonto
-    public void deleteUser(String userId) {
+    public String deleteUser(String userId) {
         if (userAccounts.remove(userId) != null) {
-            System.out.println("User account deleted successfully.");
+            return null; // Rückgabe von null, wenn das Konto erfolgreich gelöscht wurde
         } else {
-            System.out.println("User not found!");
+            return "User not found!"; // Fehlermeldung, wenn der Benutzer nicht gefunden wurde
         }
     }
 
-    // Methode zum Abrufen der Benutzerdetails (zu Testzwecken)
+    // Methode zum Abrufen der Benutzerdetails (für Testzwecke)
     public User getUser(String userId) {
         return userAccounts.get(userId);
+    }
+
+    // Getter für Fehlermeldungen
+    public String getErrorMessage() {
+        return errorMessage; // Rückgabe der Fehlermeldung
     }
 }
