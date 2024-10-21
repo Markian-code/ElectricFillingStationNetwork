@@ -10,6 +10,7 @@ import java.util.Map;
 public class ChargerSteps {
 
     private final Map<String, String> chargers = new HashMap<>(); // Store chargers by their IDs
+    private String lastErrorMessage = ""; // Store the last error message
 
     @Given("I have no chargers")
     public void iHaveNoChargers() {
@@ -22,7 +23,8 @@ public class ChargerSteps {
         if (!chargers.containsKey(id)) {
             addCharger(id);
         } else {
-            System.out.println("Charger with ID " + id + " already exists.");
+            lastErrorMessage = "Charger ID already exists";
+            System.out.println(lastErrorMessage);
         }
     }
 
@@ -82,5 +84,10 @@ public class ChargerSteps {
     public void iHaveAnExistingChargerWithID(String arg0) {
         chargers.put(arg0, "Charger " + arg0);
         System.out.println("A charger with ID " + arg0 + " is present in the system.");
+    }
+    @Then("an error should be reported saying {string}")
+    public void anErrorShouldBeReportedSaying(String errorMessage) {
+        assert errorMessage.equals(lastErrorMessage) : "Expected: " + errorMessage + ", but found: " + lastErrorMessage;
+
     }
 }
