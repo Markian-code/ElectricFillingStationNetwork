@@ -4,22 +4,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Optional;
 
 public class Location {
-    private final Map<String, Object[]> locations = new HashMap<>();
+    private final Map<String, LocationData> locations = new HashMap<>();
 
-    public void addLocation(String name, String address,double pricePerACkwH, double pricePerDCkwH, double priceACMinute, double priceDCMinute) {
-        locations.put(name, new Object[] {address, pricePerACkwH, pricePerDCkwH, priceACMinute, priceDCMinute, new ArrayList<Charger>()});
+    public void addLocation(String name, String address, double pricePerACkwH, double pricePerDCkwH, double priceACMinute, double priceDCMinute) {
+        locations.put(name, new LocationData(address, pricePerACkwH, pricePerDCkwH, priceACMinute, priceDCMinute));
     }
 
     public int getLocationCount() {
         return locations.size();
     }
 
+    public Optional<LocationData> getLocationByName(String name) {
+        return Optional.ofNullable(locations.get(name));
+    }
+
     public String getLocationAddressByName(String name) {
-        Object[] locationData = locations.get(name);
-        return locationData != null ? locationData[0].toString() : null;
+        return getLocationByName(name).map(LocationData::getAddress)
+                .orElseThrow(() -> new IllegalArgumentException("Location with name " + name + " does not exist."));
     }
 
     public boolean locationExists(String name) {
@@ -27,143 +31,107 @@ public class Location {
     }
 
     public void deleteLocation(String name) {
-        if (locations.containsKey(name)) {
-            locations.remove(name);
-        } else {
+        if (!locations.containsKey(name)) {
             throw new IllegalArgumentException("Location with name " + name + " does not exist.");
         }
+        locations.remove(name);
     }
 
+    // Generalized method to avoid redundancy for prices
+    private double getPrice(String name, PriceType type) {
+        LocationData location = getLocationByName(name).orElseThrow(() -> new IllegalArgumentException("Location with name " + name + " does not exist."));
+        return switch (type) {
+            case AC_KWH -> location.getPricePerACkwH();
+            case DC_KWH -> location.getPricePerDCkwH();
+            case AC_MINUTE -> location.getPriceACMinute();
+            case DC_MINUTE -> location.getPriceDCMinute();
+        };
+    }
 
     public double getPricePerACkwHByName(String name) {
-        Object[] locationData = locations.get(name);
-        if (locationData == null) {
-            throw new IllegalArgumentException("Location with name " + name + " does not exist.");
-        }
-        return (double) locationData[1];
+        return getPrice(name, PriceType.AC_KWH);
     }
-
 
     public double getPricePerDCkwHByName(String name) {
-        Object[] locationData = locations.get(name);
-        if (locationData == null) {
-            throw new IllegalArgumentException("Location with name " + name + " does not exist.");
-        }
-        return (double) locationData[2];
+        return getPrice(name, PriceType.DC_KWH);
     }
-
 
     public double getPriceACMinuteByName(String name) {
-        Object[] locationData = locations.get(name);
-        if (locationData == null) {
-            throw new IllegalArgumentException("Location with name " + name + " does not exist.");
-        }
-        return (double) locationData[3];
+        return getPrice(name, PriceType.AC_MINUTE);
     }
-
 
     public double getPriceDCMinuteByName(String name) {
-        Object[] locationData = locations.get(name);
-        if (locationData == null) {
-            throw new IllegalArgumentException("Location with name " + name + " does not exist.");
-        }
-        return (double) locationData[4];
+        return getPrice(name, PriceType.DC_MINUTE);
     }
 
+    // Updating prices with a generalized method
+    private void updatePrice(String name, double newPrice, PriceType type) {
+        LocationData location = getLocationByName(name)
+                .orElseThrow(() -> new IllegalArgumentException("Location with name " + name + " does not exist."));
+        switch (type) {
+            case AC_KWH -> location.setPricePerACkwH(newPrice);
+            case DC_KWH -> location.setPricePerDCkwH(newPrice);
+            case AC_MINUTE -> location.setPriceACMinute(newPrice);
+            case DC_MINUTE -> location.setPriceDCMinute(newPrice);
+        }
+    }
 
     public void updatePricePerACkwH(String name, double newPricePerACkwH) {
-        Object[] locationData = locations.get(name);
-        if (locationData != null) {
-            locationData[1] = newPricePerACkwH;
-        } else {
-            throw new IllegalArgumentException("Location with name " + name + " does not exist.");
-        }
+        updatePrice(name, newPricePerACkwH, PriceType.AC_KWH);
     }
 
     public void updatePricePerDCkwH(String name, double newPricePerDCkwH) {
-        Object[] locationData = locations.get(name);
-        if (locationData != null) {
-            locationData[2] = newPricePerDCkwH;
-        } else {
-            throw new IllegalArgumentException("Location with name " + name + " does not exist.");
-        }
+        updatePrice(name, newPricePerDCkwH, PriceType.DC_KWH);
     }
 
-
     public void updatePriceACMinute(String name, double newPriceACMinute) {
-        Object[] locationData = locations.get(name);
-        if (locationData != null) {
-            locationData[3] = newPriceACMinute;
-        } else {
-            throw new IllegalArgumentException("Location with name " + name + " does not exist.");
-        }
+        updatePrice(name, newPriceACMinute, PriceType.AC_MINUTE);
     }
 
     public void updatePriceDCMinute(String name, double newPriceDCMinute) {
-        Object[] locationData = locations.get(name);
-        if (locationData != null) {
-            locationData[4] = newPriceDCMinute;
-        } else {
-            throw new IllegalArgumentException("Location with name " + name + " does not exist.");
-        }
+        updatePrice(name, newPriceDCMinute, PriceType.DC_MINUTE);
     }
 
     public void addChargerToLocation(String locationName, String chargerId) {
-        Object[] locationData = locations.get(locationName);
-        if (locationData != null) {
-            List<Charger> chargers = (List<Charger>) locationData[5];
-            Charger charger = Charger.getChargerById(chargerId);
-            if (charger != null) {
-                chargers.add(charger);
-            } else {
-                throw new IllegalArgumentException("Charger with ID " + chargerId + " does not exist.");
-            }
+        LocationData location = getLocationByName(locationName)
+                .orElseThrow(() -> new IllegalArgumentException("Location with name " + locationName + " does not exist."));
+        Charger charger = Charger.getChargerById(chargerId);
+        if (charger != null) {
+            location.addCharger(charger);
         } else {
-            throw new IllegalArgumentException("Location with name " + locationName + " does not exist.");
+            throw new IllegalArgumentException("Charger with ID " + chargerId + " does not exist.");
         }
     }
 
-
     public List<Charger> getChargersByLocation(String locationName) {
-        Object[] locationData = locations.get(locationName);
-        if (locationData == null) {
-            throw new IllegalArgumentException("Location with name " + locationName + " does not exist.");
-        }
-        return (List<Charger>) locationData[5];
+        return getLocationByName(locationName)
+                .map(LocationData::getChargers)
+                .orElseThrow(() -> new IllegalArgumentException("Location with name " + locationName + " does not exist."));
     }
 
     public void setChargerStatusOfLocation(String locationName, String chargerId, Status newStatus) {
-        Object[] locationData = locations.get(locationName);
-        if (locationData != null) {
-            List<Charger> chargers = (List<Charger>) locationData[5];
-            for (Charger charger : chargers) {
-                if (charger.getChargerId().equals(chargerId)) {
-                    charger.setStatus(newStatus);
-                    return;
-                }
-            }
-            throw new IllegalArgumentException("Charger with ID " + chargerId + " does not exist at this location.");
+        LocationData location = getLocationByName(locationName)
+                .orElseThrow(() -> new IllegalArgumentException("Location with name " + locationName + " does not exist."));
+        Charger charger = location.getChargerById(chargerId)
+                .orElseThrow(() -> new IllegalArgumentException("Charger with ID " + chargerId + " does not exist at this location."));
+        charger.setStatus(newStatus);
+    }
 
-        } else {
-            throw new IllegalArgumentException("Location with name " + locationName + " does not exist.");
+    public void removeChargerFromLocation(String locationName, String chargerId) {
+        LocationData location = getLocationByName(locationName)
+                .orElseThrow(() -> new IllegalArgumentException("Location with name " + locationName + " does not exist."));
+        if (!location.removeCharger(chargerId)) {
+            throw new IllegalArgumentException("Charger with ID " + chargerId + " does not exist at this location.");
         }
     }
 
+    public Map<String, LocationData> getAllLocations() {
+        return locations;
+    }
 
-    public void removeChargerFromLocation(String locationName, String chargerId) {
-        Object[] locationData = locations.get(locationName);
-        if (locationData != null) {
-            List<Charger> chargers = (List<Charger>) locationData[5];
-            boolean chargerRemoved = chargers.removeIf(charger -> charger.getChargerId().equals(chargerId));
-
-            if (!chargerRemoved) {
-                throw new IllegalArgumentException("Charger with ID " + chargerId + " does not exist at this location.");
-            }
-        } else {
-            throw new IllegalArgumentException("Location with name " + locationName + " does not exist.");
-        }
-
-
+    // Enum for handling different price types
+    private enum PriceType {
+        AC_KWH, DC_KWH, AC_MINUTE, DC_MINUTE
     }
 
 
