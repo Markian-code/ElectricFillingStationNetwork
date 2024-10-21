@@ -27,3 +27,25 @@ Feature:
     Then my User account is deleted
     And I receive a confirmation that my account has been removed
 
+  Scenario: Attempting to Create a User Account with Missing Details
+    Given I am on the registration page
+    When I provide my personal details with missing email
+    Then I receive an error message stating "Email is required"
+    And my User account is not created
+
+  Scenario: Adding Funds with Invalid Amount
+    Given I am logged into my User account
+    When I attempt to add -$20 to my prepaid account
+    Then I receive an error message stating "Invalid amount"
+    And my prepaid account balance remains unchanged
+
+  Scenario: Attempting to Update User Information with Invalid Email
+    Given I am logged into my User account
+    When I update my email to "invalid-email-format"
+    Then I receive an error message stating "Invalid email format"
+    And my email remains unchanged
+
+  Scenario: Deleting a Non-Existent User Account
+    Given I am logged into my User account
+    When I attempt to delete my account multiple times
+    Then I receive a message stating "User account does not exist"
