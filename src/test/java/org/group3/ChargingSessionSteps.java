@@ -13,13 +13,13 @@ import java.util.Map;
 
 public class ChargingSessionSteps {
 
-    private Location locationManager;
+    private Location chargingLocation;
     private LocalDateTime sessionStartTime;
     private ChargingSession currentSession;
 
     @Given("the following location exists:")
     public void theFollowingLocationExists(io.cucumber.datatable.DataTable locationDataTable) {
-        locationManager = new Location();
+        chargingLocation = new Location();
         List<Map<String, String>> locations = locationDataTable.asMaps();
         for (Map<String, String> loc : locations) {
             String name = loc.get("name");
@@ -28,7 +28,7 @@ public class ChargingSessionSteps {
             double pricePerDCkwH = Double.parseDouble(loc.get("pricePerDCkwH"));
             double priceACMinute = Double.parseDouble(loc.get("priceACMinute"));
             double priceDCMinute = Double.parseDouble(loc.get("priceDCMinute"));
-            locationManager.addLocation(name, address, pricePerACkwH, pricePerDCkwH, priceACMinute, priceDCMinute);
+            chargingLocation.addLocation(name, address, pricePerACkwH, pricePerDCkwH, priceACMinute, priceDCMinute);
         }
     }
 
@@ -46,18 +46,16 @@ public class ChargingSessionSteps {
     @When("user {string} starts a charging session at {string} using charger {string} with {double} kWh")
     public void userStartsChargingSession(String username, String locationName, String chargerId, double powerConsumed) {
         // Hole die LocationData anhand des Location-Namens
-        LocationData locationData = locationManager.getLocationByName(locationName)
+        LocationData locationData = chargingLocation.getLocationByName(locationName)
                 .orElseThrow(() -> new IllegalArgumentException("Location '" + locationName + "' not found"));
 
-        // Prüfe, ob der Charger existiert
         Charger charger = Charger.getChargerById(chargerId);
         if (charger == null) {
             throw new IllegalArgumentException("Charger with ID '" + chargerId + "' does not exist.");
         }
 
-        sessionStartTime = LocalDateTime.now();  // Setze die Startzeit der Session
-        // Erstelle eine neue ChargingSession und übergebe den locationName und charger
-        currentSession = new ChargingSession(username, sessionStartTime, locationManager, locationName, charger, powerConsumed);
+        sessionStartTime = LocalDateTime.now();
+        currentSession = new ChargingSession(username, sessionStartTime, chargingLocation, locationName, charger, powerConsumed);
     }
 
     @When("the session lasts {int} minutes")

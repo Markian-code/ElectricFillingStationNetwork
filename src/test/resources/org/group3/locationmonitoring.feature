@@ -1,7 +1,7 @@
 Feature: Location Monitoring
 
   As an owner or user
-  I want to monitor all locations and their chargers
+  I want to monitor all locations
   So that I can see details about locations and the status of chargers
 
   Scenario: Display all locations with chargers
@@ -12,20 +12,20 @@ Feature: Location Monitoring
 
     And the following chargers exist:
       | ID        | Type  | Status     |
-      | CHARGER-1 | AC    | FREI       |
-      | CHARGER-2 | DC    | BESETZT    |
-      | CHARGER-3 | AC    | FREI       |
+      | CHARGER-91 | AC    | FREI       |
+      | CHARGER-92 | DC    | BESETZT    |
+      | CHARGER-93 | AC    | FREI       |
 
     And chargers are assigned to locations:
       | name               | chargerID |
-      | Wien Hauptbahnhof  | CHARGER-1 |
-      | Wien Hauptbahnhof  | CHARGER-2 |
-      | Graz Operngasse    | CHARGER-3 |
+      | Wien Hauptbahnhof  | CHARGER-91 |
+      | Wien Hauptbahnhof  | CHARGER-92 |
+      | Graz Operngasse    | CHARGER-93 |
 
     When I monitor all locations
     Then the system displays all locations with chargers
     And the output should contain the following:
       | name              | Charger ID | Type | Status  |
-      | Wien Hauptbahnhof | CHARGER-1  | AC   | FREI    |
-      | Wien Hauptbahnhof | CHARGER-2  | DC   | BESETZT |
-      | Graz Operngasse   | CHARGER-3  | AC   | FREI    |
+      | Wien Hauptbahnhof | CHARGER-91  | AC   | FREI    |
+      | Wien Hauptbahnhof | CHARGER-92  | DC   | BESETZT |
+      | Graz Operngasse   | CHARGER-93  | AC   | FREI    |
