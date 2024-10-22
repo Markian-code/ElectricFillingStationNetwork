@@ -17,10 +17,10 @@ public class ChargingSession {
     private double totalCost;
     private final String locationName;
 
-    // Liste zum Speichern aller ChargingSessions
+
     private static final List<ChargingSession> allSessions = new ArrayList<>();
 
-    // Konstruktor für eine neue ChargingSession
+
     public ChargingSession(String username, LocalDateTime startTime, Location location, String locationName, Charger charger, double powerConsumed) {
         this.username = username;
         this.startTime = startTime;
@@ -32,13 +32,13 @@ public class ChargingSession {
         allSessions.add(this);  // Füge die neue Session zur Liste hinzu
     }
 
-    // Beende die Session und berechne die Gesamtkosten
+
     public void endSession(LocalDateTime endTime) {
         this.endTime = endTime;
         calculateTotalCost();
     }
 
-    // Berechne die Gesamtdauer der Session
+
     public Duration getDuration() {
         if (endTime != null) {
             return Duration.between(startTime, endTime);
@@ -47,16 +47,16 @@ public class ChargingSession {
         }
     }
 
-    // Berechne die Gesamtkosten der Session basierend auf kWh und Minuten
+
     private void calculateTotalCost() {
         Duration duration = getDuration();
         long minutes = duration.toMinutes();
 
-        // Verwende den Location-Namen, um die Location-Daten zu holen
+
         LocationData locationData = location.getLocationByName(locationName)
                 .orElseThrow(() -> new IllegalArgumentException("Location does not exist."));
 
-        // Kostenberechnung basierend auf AC/DC
+
         if (chargerType == Type.AC) {
             double kWhCost = powerConsumed * locationData.getPricePerACkwH();  // Kosten für kWh (AC)
             double minuteCost = minutes * locationData.getPriceACMinute();     // Minutenkosten (AC)
@@ -68,7 +68,7 @@ public class ChargingSession {
         }
     }
 
-    // Getter-Methoden für alle Eigenschaften
+
     public String getUsername() {
         return username;
     }
@@ -105,8 +105,11 @@ public class ChargingSession {
         return locationName;
     }
 
-    // Statische Methode, um alle Sessions abzurufen
+
     public static List<ChargingSession> getAllSessions() {
         return allSessions;
+    }
+    public static void resetSessions() {
+        allSessions.clear();
     }
 }

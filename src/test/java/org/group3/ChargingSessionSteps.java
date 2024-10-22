@@ -1,5 +1,6 @@
 package org.group3;
 
+import io.cucumber.java.Before;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
@@ -8,6 +9,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
@@ -16,6 +18,12 @@ public class ChargingSessionSteps {
     private Location chargingLocation;
     private LocalDateTime sessionStartTime;
     private ChargingSession currentSession;
+
+    @Before
+    public void resetChargingSession() {
+        ChargingSession.resetSessions();
+    }
+
 
     @Given("the following location exists:")
     public void theFollowingLocationExists(io.cucumber.datatable.DataTable locationDataTable) {
@@ -45,7 +53,6 @@ public class ChargingSessionSteps {
 
     @When("user {string} starts a charging session at {string} using charger {string} with {double} kWh")
     public void userStartsChargingSession(String username, String locationName, String chargerId, double powerConsumed) {
-        // Hole die LocationData anhand des Location-Namens
         LocationData locationData = chargingLocation.getLocationByName(locationName)
                 .orElseThrow(() -> new IllegalArgumentException("Location '" + locationName + "' not found"));
 
@@ -55,6 +62,20 @@ public class ChargingSessionSteps {
         }
 
         sessionStartTime = LocalDateTime.now();
+        currentSession = new ChargingSession(username, sessionStartTime, chargingLocation, locationName, charger, powerConsumed);
+    }
+
+    @When("user {string} starts a charging session at {string} at {string} using charger {string} with {double} kWh")
+    public void userStartsChargingSession(String username, String starttime, String locationName, String chargerId, double powerConsumed) {
+        LocationData locationData = chargingLocation.getLocationByName(locationName)
+                .orElseThrow(() -> new IllegalArgumentException("Location '" + locationName + "' not found"));
+
+        Charger charger = Charger.getChargerById(chargerId);
+        if (charger == null) {
+            throw new IllegalArgumentException("Charger with ID '" + chargerId + "' does not exist.");
+        }
+
+        sessionStartTime = LocalDateTime.parse(starttime, DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm"));
         currentSession = new ChargingSession(username, sessionStartTime, chargingLocation, locationName, charger, powerConsumed);
     }
 
