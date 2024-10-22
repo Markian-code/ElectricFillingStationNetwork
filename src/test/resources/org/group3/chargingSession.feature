@@ -1,7 +1,7 @@
 Feature: Charging Session
 
   As owner
-  the system should monitor all charging session of clients
+  i want the system to monitor all charging session of my clients
   so that i can bill them correctly
 
   Scenario: User starts and finishes a charging session
@@ -10,8 +10,8 @@ Feature: Charging Session
       | Wien Hauptbahnhof | Hauptbahnhof 11, Wien      | 0.25          | 0.30          | 0.10          | 0.12         |
     And the following charger exists:
       | ID        | Type | Status  |
-      | CHARGER-1 | AC   | FREI    |
-    When user "john_doe" starts a charging session at "Wien Hauptbahnhof" using charger "CHARGER-1" with 25.0 kWh
+      | CHARGER-81 | AC   | FREI    |
+    When user "john_doe" starts a charging session at "Wien Hauptbahnhof" using charger "CHARGER-81" with 25.0 kWh
     And the session lasts 60 minutes
     Then the total cost for the session should be €12.25
     And the session duration should be 60 minutes

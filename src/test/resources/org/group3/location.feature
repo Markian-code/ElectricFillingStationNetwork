@@ -1,7 +1,8 @@
-Feature: Admin Locations
-  As owner
-  i want do admin locations
-  So that clients can use the electric filling station network
+Feature: Location Management
+
+  As the owner of the electric filling station network,
+  I want to administer and manage the locations.
+  So that clients can access and use the station network.
 
   Scenario: adding locations to the electric filling station network
 
@@ -43,54 +44,54 @@ Feature: Admin Locations
   Scenario: Add chargers to the location
     Given following chargers exists:
       |ID       |Type   |Status        |
-      |CHARGER-1|AC     |BESETZT       |
-      |CHARGER-2|DC     |FREI          |
-      |CHARGER-3|AC     |AUSSER_BETRIEB|
-      |CHARGER-4|AC     |FREI          |
-      |CHARGER-5|DC     |FREI          |
-      |CHARGER-6|AC     |FREI          |
+      |CHARGER-21|AC     |BESETZT       |
+      |CHARGER-22|DC     |FREI          |
+      |CHARGER-23|AC     |AUSSER_BETRIEB|
+      |CHARGER-24|AC     |FREI          |
+      |CHARGER-25|DC     |FREI          |
+      |CHARGER-26|AC     |FREI          |
     Given location "Wien Dresdnerstrasse" has following chargers:
       |ID       |Type   |Status        |
-      |CHARGER-1|AC     |BESETZT       |
-      |CHARGER-2|DC     |FREI          |
-      |CHARGER-3|AC     |AUSSER_BETRIEB|
+      |CHARGER-21|AC     |BESETZT       |
+      |CHARGER-22|DC     |FREI          |
+      |CHARGER-23|AC     |AUSSER_BETRIEB|
     When owner adds the following chargers to "Wien Dresdnerstrasse":
       |ID       |Type   |Status|
-      |CHARGER-4|AC     |FREI  |
-      |CHARGER-5|DC     |FREI  |
-      |CHARGER-6|AC     |FREI  |
+      |CHARGER-24|AC     |FREI  |
+      |CHARGER-25|DC     |FREI  |
+      |CHARGER-26|AC     |FREI  |
     Then location "Wien Dresdnerstrasse" has 6 chargers
-    And charger with ID "CHARGER-5" is of type "DC" and status "FREI"
+    And charger with ID "CHARGER-25" is of type "DC" and status "FREI"
 
 
   Scenario: Remove a charger from a location
     Given following chargers exists:
       | ID        | Type | Status        |
-      | CHARGER-1 | AC   | FREI          |
-      | CHARGER-2 | DC   | BESETZT       |
-      | CHARGER-3 | AC   | AUSSER_BETRIEB|
+      | CHARGER-31 | AC   | FREI          |
+      | CHARGER-32 | DC   | BESETZT       |
+      | CHARGER-33 | AC   | AUSSER_BETRIEB|
     Given location "Wien Dresdnerstrasse" has following chargers:
       | ID        |
-      | CHARGER-1 |
-      | CHARGER-2 |
-      | CHARGER-3 |
-    When owner removes charger with ID "CHARGER-2" from location "Wien Dresdnerstrasse"
-    Then charger with ID "CHARGER-2" should not exist at location "Wien Dresdnerstrasse"
+      | CHARGER-31 |
+      | CHARGER-32 |
+      | CHARGER-33 |
+    When owner removes charger with ID "CHARGER-32" from location "Wien Dresdnerstrasse"
+    Then charger with ID "CHARGER-32" should not exist at location "Wien Dresdnerstrasse"
     Then location "Wien Dresdnerstrasse" has 2 chargers
 
 
   Scenario: Change the status of a charger at a location
     Given the following chargers are created:
       | ID        | Type | Status        |
-      | CHARGER-1 | AC   | FREI          |
-      | CHARGER-2 | DC   | BESETZT       |
+      | CHARGER-41 | AC   | FREI          |
+      | CHARGER-42 | DC   | BESETZT       |
     And location "Wien Hauptbahnhof" has following chargers:
       | ID        |
-      | CHARGER-1 |
-      | CHARGER-2 |
-    When owner sets status of charger with ID "CHARGER-1" at location "Wien Hauptbahnhof" to "BESETZT"
-    Then charger with ID "CHARGER-1" should have type "AC" and status "BESETZT"
-    And charger with ID "CHARGER-2" should still have status "BESETZT"
+      | CHARGER-41 |
+      | CHARGER-42 |
+    When owner sets status of charger with ID "CHARGER-41" at location "Wien Hauptbahnhof" to "BESETZT"
+    Then charger with ID "CHARGER-41" should have type "AC" and status "BESETZT"
+    And charger with ID "CHARGER-42" should still have status "BESETZT"
 
 
   Scenario: Deleting a non-existent location
@@ -111,13 +112,13 @@ Feature: Admin Locations
   Scenario: Changing the status of a non-existent charger
     Given following chargers exists:
       | ID        | Type | Status        |
-      | CHARGER-1 | AC   | FREI          |
-      | CHARGER-2 | DC   | BESETZT       |
-      | CHARGER-3 | AC   | AUSSER_BETRIEB|
+      | CHARGER-71 | AC   | FREI          |
+      | CHARGER-72 | DC   | BESETZT       |
+      | CHARGER-73 | AC   | AUSSER_BETRIEB|
     Given location "Wien Dresdnerstrasse" has following chargers:
       | ID        |
-      | CHARGER-1 |
-      | CHARGER-2 |
-      | CHARGER-3 |
+      | CHARGER-71 |
+      | CHARGER-72 |
+      | CHARGER-73 |
     When the owner tries to change the status of the charger with ID "NonExistentCharger" at location "Wien Dresdnerstrasse" to "BESETZT"
     Then an error message should be displayed saying "Charger with ID NonExistentCharger does not exist at this location."

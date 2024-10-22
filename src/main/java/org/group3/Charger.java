@@ -17,6 +17,9 @@ public class Charger {
     }
 
     public static Charger createCharger(String chargerId, Type type, Status status) {
+        if (chargers.containsKey(chargerId)) {
+            throw new IllegalArgumentException("A charger with ID " + chargerId + " already exists");
+        }
         Charger charger = new Charger(chargerId, type, status);
         chargers.put(chargerId, charger);
         return charger;
@@ -43,11 +46,18 @@ public class Charger {
     }
 
     public static void deleteCharger(String chargerId) {
+        if (!chargers.containsKey(chargerId)) {
+            throw new IllegalArgumentException("Charger with ID " + chargerId + " does not exist");
+        }
         chargers.remove(chargerId);
     }
 
     public static int getTotalNumberOfChargers() {
         return chargers.size();
+    }
+
+    public static void clearChargers() {
+        chargers.clear();
     }
 
 
