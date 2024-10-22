@@ -3,6 +3,8 @@ package org.group3;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
+import java.util.ArrayList;
+import java.util.List;
 
 public class UserAccounts {
     // Eine Map, um Benutzerkonten mit der Benutzer-ID als Schlüssel zu speichern
@@ -15,12 +17,16 @@ public class UserAccounts {
         private String name;
         private String email;
         private double prepaidBalance;
+        private List<Double> moneyTopUps; // Liste der Aufladungen
+        private double outstandingBalance; // Ausstehender Saldo
 
         public User(String name, String email) {
             this.userId = UUID.randomUUID().toString(); // Generiere eine eindeutige Benutzer-ID
             this.name = name;
             this.email = email;
             this.prepaidBalance = 0.0; // Initialisiere den Kontostand auf null
+            this.moneyTopUps = new ArrayList<>(); // Initialisiere die Liste der Aufladungen
+            this.outstandingBalance = 0.0; // Initialisiere den ausstehenden Saldo
         }
 
         // Getter und Setter
@@ -50,6 +56,19 @@ public class UserAccounts {
 
         public void addFunds(double amount) {
             this.prepaidBalance += amount; // Füge dem Kontostand Guthaben hinzu
+            this.moneyTopUps.add(amount); // Füge die Aufladung zur Liste hinzu
+        }
+
+        public List<Double> getMoneyTopUps() {
+            return moneyTopUps;
+        }
+
+        public double getOutstandingBalance() {
+            return outstandingBalance;
+        }
+
+        public void setOutstandingBalance(double outstandingBalance) {
+            this.outstandingBalance = outstandingBalance;
         }
     }
 
@@ -75,6 +94,17 @@ public class UserAccounts {
         User user = userAccounts.get(userId);
         if (user != null) {
             user.addFunds(amount); // Füge Guthaben zum Prepaid-Konto des Benutzers hinzu
+            return null; // Rückgabe von null, wenn die Operation erfolgreich ist
+        } else {
+            return "User not found!"; // Fehlermeldung, wenn der Benutzer nicht gefunden wurde
+        }
+    }
+
+    // Setze den ausstehenden Saldo
+    public String setOutstandingBalance(String userId, double balance) {
+        User user = userAccounts.get(userId);
+        if (user != null) {
+            user.setOutstandingBalance(balance);
             return null; // Rückgabe von null, wenn die Operation erfolgreich ist
         } else {
             return "User not found!"; // Fehlermeldung, wenn der Benutzer nicht gefunden wurde
