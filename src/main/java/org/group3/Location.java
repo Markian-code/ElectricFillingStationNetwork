@@ -37,7 +37,7 @@ public class Location {
         locations.remove(name);
     }
 
-    // Generalized method to avoid redundancy for prices
+
     private double getPrice(String name, PriceType type) {
         LocationData location = getLocationByName(name).orElseThrow(() -> new IllegalArgumentException("Location with name " + name + " does not exist."));
         return switch (type) {
@@ -64,7 +64,7 @@ public class Location {
         return getPrice(name, PriceType.DC_MINUTE);
     }
 
-    // Updating prices with a generalized method
+
     private void updatePrice(String name, double newPrice, PriceType type) {
         LocationData location = getLocationByName(name)
                 .orElseThrow(() -> new IllegalArgumentException("Location with name " + name + " does not exist."));
@@ -129,7 +129,7 @@ public class Location {
         return locations;
     }
 
-    // Enum for handling different price types
+
     private enum PriceType {
         AC_KWH, DC_KWH, AC_MINUTE, DC_MINUTE
     }

@@ -1,6 +1,6 @@
 Feature: Location Monitoring
 
-  As an owner or user
+  As owner or user
   I want to monitor all locations
   So that I can see details about locations and the status of chargers
 
