@@ -1,4 +1,4 @@
-Feature:
+Feature: User Accounts
 
   As a User,
   I want to manage my account effectively,
