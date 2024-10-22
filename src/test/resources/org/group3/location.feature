@@ -91,3 +91,33 @@ Feature: Admin Locations
     When owner sets status of charger with ID "CHARGER-1" at location "Wien Hauptbahnhof" to "BESETZT"
     Then charger with ID "CHARGER-1" should have type "AC" and status "BESETZT"
     And charger with ID "CHARGER-2" should still have status "BESETZT"
+
+
+  Scenario: Deleting a non-existent location
+    Given the following locations exist:
+      | name              | address                  | PricePerACkwH | PricePerDCkwH | PriceACMinute | PriceDCMinute |
+      | Wien Hauptbahnhof | Hauptbahnhof 11, Wien    | 0.30          | 0.45          | 0.10          | 0.15          |
+    When the owner deletes the location with name "NonExistentLocation"
+    Then an error message should be displayed saying "Location with name NonExistentLocation does not exist."
+
+  Scenario: Adding a charger to a non-existent location
+    Given the following locations exist:
+      | name              | address                 | PricePerACkwH | PricePerDCkwH | PriceACMinute | PriceDCMinute |
+      | Wien Hauptbahnhof | Hauptbahnhof 11, Wien   | 0.30          | 0.45          | 0.10          | 0.15          |
+    When the owner adds the charger with ID "CHARGER-12" to the location "NonExistentLocation"
+    Then an error message should be displayed saying "Location with name NonExistentLocation does not exist."
+
+
+  Scenario: Changing the status of a non-existent charger
+    Given following chargers exists:
+      | ID        | Type | Status        |
+      | CHARGER-1 | AC   | FREI          |
+      | CHARGER-2 | DC   | BESETZT       |
+      | CHARGER-3 | AC   | AUSSER_BETRIEB|
+    Given location "Wien Dresdnerstrasse" has following chargers:
+      | ID        |
+      | CHARGER-1 |
+      | CHARGER-2 |
+      | CHARGER-3 |
+    When the owner tries to change the status of the charger with ID "NonExistentCharger" at location "Wien Dresdnerstrasse" to "BESETZT"
+    Then an error message should be displayed saying "Charger with ID NonExistentCharger does not exist at this location."

@@ -13,6 +13,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class LocationSteps {
 
         Location location = new Location();
+        private String errorMessage = "";
 
         @When("owner adds the following location:")
         public void ownerAddsTheFollowingLocations(io.cucumber.datatable.DataTable locationDataTable) {
@@ -167,5 +168,43 @@ public class LocationSteps {
         public void ownerSetsStatusOfChargerWithIDAtLocationTo(String chargerId, String name, String newStatus) {
                 location.setChargerStatusOfLocation(name, chargerId, Status.valueOf(newStatus));
         }
+
+
+
+        //////////////////////////  Error Cases ////////////////////////////
+
+        @When("the owner deletes the location with name {string}")
+        public void theOwnerDeletesTheLocationWithName(String name) {
+                try {
+                        location.deleteLocation(name);
+                } catch (IllegalArgumentException e) {
+                        errorMessage = e.getMessage();
+                }
+        }
+
+        @When("the owner adds the charger with ID {string} to the location {string}")
+        public void theOwnerAddsTheChargerWithIDToTheLocation(String chargerId, String locationName) {
+                try {
+                        location.addChargerToLocation(locationName, chargerId);
+                } catch (IllegalArgumentException e) {
+                        errorMessage = e.getMessage();
+                }
+        }
+
+        @Then("an error message should be displayed saying {string}")
+        public void anErrorMessageShouldBeDisplayedSaying(String expectedErrorMessage) {
+                assertEquals(expectedErrorMessage, errorMessage);
+        }
+
+
+        @When("the owner tries to change the status of the charger with ID {string} at location {string} to {string}")
+        public void theOwnerTriesToChangeTheStatusOfTheChargerWithIDAtLocationTo(String chargerId, String locationName, String newStatus) {
+                try {
+                        location.setChargerStatusOfLocation(locationName, chargerId, Status.valueOf(newStatus));
+                } catch (IllegalArgumentException e) {
+                        errorMessage = e.getMessage();
+                }
+        }
+
 
 }
