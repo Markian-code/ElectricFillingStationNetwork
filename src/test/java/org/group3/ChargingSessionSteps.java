@@ -1,104 +1,114 @@
 package org.group3;
 
 import io.cucumber.java.Before;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Given;
-import io.cucumber.java.en.When;
 import io.cucumber.java.en.Then;
-
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import io.cucumber.java.en.When;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.Map;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 public class ChargingSessionSteps {
 
-    private Location chargingLocation;
-    private LocalDateTime sessionStartTime;
-    private ChargingSession currentSession;
+    private ECS ecs;
+    private String errorMessage;
+    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
+    private UserAccount userAccount;
 
     @Before
-    public void resetChargingSession() {
-        ChargingSession.resetSessions();
+    public void setUp() {
+        ecs = new ECS();
+    }
+
+    @Given("user {string} with email {string} and prepaid balance of {double} exists")
+    public void userIsRegistered(String username, String email, double balance) {
+        userAccount = new UserAccount(username, email);
+        userAccount.addFunds(balance);
+        ecs.addUser(userAccount);
+
     }
 
 
-    @Given("the following location exists:")
-    public void theFollowingLocationExists(io.cucumber.datatable.DataTable locationDataTable) {
-        chargingLocation = new Location();
-        List<Map<String, String>> locations = locationDataTable.asMaps();
-        for (Map<String, String> loc : locations) {
-            String name = loc.get("name");
-            String address = loc.get("address");
-            double pricePerACkwH = Double.parseDouble(loc.get("pricePerACkwH"));
-            double pricePerDCkwH = Double.parseDouble(loc.get("pricePerDCkwH"));
-            double priceACMinute = Double.parseDouble(loc.get("priceACMinute"));
-            double priceDCMinute = Double.parseDouble(loc.get("priceDCMinute"));
-            chargingLocation.addLocation(name, address, pricePerACkwH, pricePerDCkwH, priceACMinute, priceDCMinute);
+    @When("user with email {string} starts a charging session at {string} with charger {string} consuming {double} kWh at {string}")
+    public void userStartsChargingSession(String email, String locationName, String chargerId, double powerConsumed, String startTime) {
+        try {
+            LocalDateTime start = LocalDateTime.parse(startTime, formatter);
+            ecs.createChargingSession(email, locationName, chargerId, start, powerConsumed);
+        } catch (IllegalArgumentException e) {
+            errorMessage = e.getMessage();
         }
     }
 
-    @Given("the following charger exists:")
-    public void theFollowingChargerExists(io.cucumber.datatable.DataTable chargerDataTable) {
-        List<Map<String, String>> chargers = chargerDataTable.asMaps();
-        for (Map<String, String> charger : chargers) {
-            String chargerId = charger.get("ID");
-            Type type = Type.valueOf(charger.get("Type"));
-            Status status = Status.valueOf(charger.get("Status"));
-            Charger.createCharger(chargerId, type, status);
+
+    @And("user with email {string} stops the charging session at {string}")
+    public void userStopsChargingSession(String email, String endTime) {
+        try {
+            LocalDateTime end = LocalDateTime.parse(endTime, formatter);
+            ecs.endChargingSession(email, end);
+        } catch (IllegalArgumentException e) {
+            errorMessage = e.getMessage();
         }
     }
 
-    @When("user {string} starts a charging session at {string} using charger {string} with {double} kWh")
-    public void userStartsChargingSession(String username, String locationName, String chargerId, double powerConsumed) {
-        LocationData locationData = chargingLocation.getLocationByName(locationName)
-                .orElseThrow(() -> new IllegalArgumentException("Location '" + locationName + "' not found"));
 
-        Charger charger = Charger.getChargerById(chargerId);
-        if (charger == null) {
-            throw new IllegalArgumentException("Charger with ID '" + chargerId + "' does not exist.");
+    @Then("the total charging time for user with email {string} is {int} minutes")
+    public void theTotalChargingTimeForUserIs(String email, int expectedMinutes) {
+        List<ChargingSession> sessions = ecs.getChargingSessionsByUser(email);
+        assertFalse(sessions.isEmpty(), "No charging session found for user " + email);
+        ChargingSession session = sessions.get(sessions.size() - 1); // Letzte Sitzung des Benutzers
+
+        assertTrue(session.isSessionEnded(), "Charging session has not ended.");
+        assertEquals(expectedMinutes, session.getDuration().toMinutes(), "Charging duration does not match.");
+    }
+
+
+    @And("the total cost for user with email {string} is €{double}")
+    public void theTotalCostForUserIs(String email, double expectedCost) {
+        List<ChargingSession> sessions = ecs.getChargingSessionsByUser(email);
+        assertFalse(sessions.isEmpty(), "No charging session found for user " + email);
+        ChargingSession session = sessions.get(sessions.size() - 1);
+
+        assertTrue(session.isSessionEnded(), "Charging session has not ended.");
+        assertEquals(expectedCost, session.getTotalCost(), 0.01, "Charging cost does not match.");
+    }
+
+    @And("the new balance for user with email {string} should be {double}")
+    public void theUserSBalanceShouldBe(String email, double expectedBalance) {
+        UserAccount actualUserAccount = ecs.getUserByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("User with email '" + email + "' not found"));
+        assertEquals(expectedBalance, actualUserAccount.getBalance(), 0.01);
+    }
+
+
+
+    //Error-Cases------------------------
+
+    @When("user with email {string} tries to calculate the total cost")
+    public void userTriesToCalculateTheTotalCost(String username) {
+        try {
+            ChargingSession activeSession = ecs.getChargingSessionsByUser(username).stream()
+                    .filter(session -> session.getSessionState() == SessionState.ACTIVE)
+                    .findFirst()
+                    .orElseThrow(() -> new IllegalStateException("No active session found for user '" + username + "'"));
+
+            // Hier wird die Methode getTotalCost() aufgerufen, die die IllegalStateException werfen sollte
+            activeSession.getTotalCost();
+        } catch (IllegalStateException e) {
+            // Speichere die Fehlermeldung
+            errorMessage = e.getMessage();
         }
 
-        sessionStartTime = LocalDateTime.now();
-        currentSession = new ChargingSession(username, sessionStartTime, chargingLocation, locationName, charger, powerConsumed);
     }
 
-    @When("user {string} starts a charging session at {string} at {string} using charger {string} with {double} kWh")
-    public void userStartsChargingSession(String username, String starttime, String locationName, String chargerId, double powerConsumed) {
-        LocationData locationData = chargingLocation.getLocationByName(locationName)
-                .orElseThrow(() -> new IllegalArgumentException("Location '" + locationName + "' not found"));
-
-        Charger charger = Charger.getChargerById(chargerId);
-        if (charger == null) {
-            throw new IllegalArgumentException("Charger with ID '" + chargerId + "' does not exist.");
-        }
-
-        sessionStartTime = LocalDateTime.parse(starttime, DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm"));
-        currentSession = new ChargingSession(username, sessionStartTime, chargingLocation, locationName, charger, powerConsumed);
+    @Then("an error message should be displayed {string}")
+    public void anErrorMessageBeDisplayedSaying(String expectedErrorMessage) {
+        assertEquals(expectedErrorMessage, errorMessage);
     }
 
-    @When("the session lasts {int} minutes")
-    public void theSessionLasts(int minutes) {
-        LocalDateTime sessionEndTime = sessionStartTime.plusMinutes(minutes);
-        currentSession.endSession(sessionEndTime);
-    }
 
-    @Then("the total cost for the session should be €{double}")
-    public void totalCostForTheSessionShouldBe(double expectedCost) {
-        assertEquals(expectedCost, currentSession.getTotalCost(), 0.01);
-    }
 
-    @Then("the session duration should be {int} minutes")
-    public void theSessionDurationShouldBe(int expectedMinutes) {
-        assertEquals(expectedMinutes, currentSession.getDuration().toMinutes());
-    }
-
-    @Then("the session for user {string} should exist in the list of sessions")
-    public void theSessionShouldExistInTheList(String username) {
-        boolean sessionExists = ChargingSession.getAllSessions().stream()
-                .anyMatch(session -> session.getUsername().equals(username));
-        assertTrue(sessionExists, "Session for user " + username + " should exist");
-    }
 }

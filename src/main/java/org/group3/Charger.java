@@ -1,65 +1,37 @@
 package org.group3;
 
-import java.util.HashMap;
-import java.util.Map;
-
 public class Charger {
+
     private final String chargerId;
-    private final Type type;
-    private Status status;
+    private ChargerType type;
+    private ChargerStatus status;
 
-    private static final Map<String, Charger> chargers = new HashMap<>();
 
-    private Charger(String chargerId, Type type, Status status) {
+    Charger(String chargerId, ChargerType type, ChargerStatus status) {
         this.chargerId = chargerId;
         this.type = type;
         this.status = status;
-    }
-
-    public static Charger createCharger(String chargerId, Type type, Status status) {
-        if (chargers.containsKey(chargerId)) {
-            throw new IllegalArgumentException("A charger with ID " + chargerId + " already exists");
-        }
-        Charger charger = new Charger(chargerId, type, status);
-        chargers.put(chargerId, charger);
-        return charger;
-    }
-
-    public static Charger getChargerById(String chargerId) {
-        return chargers.get(chargerId);
     }
 
     public String getChargerId() {
         return chargerId;
     }
 
-    public Status getStatus() {
-        return status;
-    }
-
-    public void setStatus(Status status) {
-        this.status = status;
-    }
-
-    public Type getType() {
+    public ChargerType getType() {
         return type;
     }
 
-    public static void deleteCharger(String chargerId) {
-        if (!chargers.containsKey(chargerId)) {
-            throw new IllegalArgumentException("Charger with ID " + chargerId + " does not exist");
-        }
-        chargers.remove(chargerId);
+    public ChargerStatus getStatus() {
+        return status;
     }
 
-    public static int getTotalNumberOfChargers() {
-        return chargers.size();
+    public void setStatus(ChargerStatus status) {
+        this.status = status;
     }
 
-    public static void clearChargers() {
-        chargers.clear();
+    public void setType(ChargerType type) {
+        this.type = type;
     }
-
 
 }
 

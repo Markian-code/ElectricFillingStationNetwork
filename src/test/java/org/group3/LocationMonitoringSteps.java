@@ -3,85 +3,78 @@ package org.group3;
 import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
-import io.cucumber.java.en.And;
 
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import static org.junit.jupiter.api.Assertions.*;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class LocationMonitoringSteps {
 
-    private Location location = new Location();
-    private LocationMonitoring locationMonitoring;
+    private ECS ecs = new ECS();
+    private LocationMonitoring locationMonitoring = new LocationMonitoring(ecs);
+    private String displayOutput;
 
-    @Given("the following locations exist:")
-    public void theFollowingLocationsExist(io.cucumber.datatable.DataTable locationDataTable) {
-        List<Map<String, String>> rows = locationDataTable.asMaps();
-        for (Map<String, String> columns : rows) {
-            location.addLocation(columns.get("name"),
-                    columns.get("address"),
-                    Double.parseDouble(columns.get("PricePerACkwH")),
-                    Double.parseDouble(columns.get("PricePerDCkwH")),
-                    Double.parseDouble(columns.get("PriceACMinute")),
-                    Double.parseDouble(columns.get("PriceDCMinute")));
-        }
-    }
 
-    @Given("the following chargers exist:")
-    public void theFollowingChargersExist(io.cucumber.datatable.DataTable chargerTable) {
-        List<Map<String, String>> rows = chargerTable.asMaps();
-        for (Map<String, String> columns : rows) {
-            Charger.createCharger(columns.get("ID"), Type.valueOf(columns.get("Type")), Status.valueOf(columns.get("Status")));
-        }
-    }
 
-    @And("chargers are assigned to locations:")
-    public void chargersAreAssignedToLocations(io.cucumber.datatable.DataTable chargerAssignmentTable) {
-        List<Map<String, String>> rows = chargerAssignmentTable.asMaps();
-        for (Map<String, String> columns : rows) {
-            String locationName = columns.get("name");
-            String chargerId = columns.get("chargerID");
-            location.addChargerToLocation(locationName, chargerId);
-        }
-    }
-
-    @When("I monitor all locations")
-    public void iMonitorAllLocations() {
-        locationMonitoring = new LocationMonitoring(location);
-        locationMonitoring.displayAllLocationsWithChargers();
-    }
-
-    @Then("the system displays all locations with chargers")
-    public void theSystemDisplaysAllLocationsWithChargers() {
-
-        locationMonitoring.displayAllLocationsWithChargers();
-    }
-
-    @Then("the output should contain the following:")
-    public void theOutputShouldContainTheFollowing(io.cucumber.datatable.DataTable expectedOutputTable) {
-        List<Map<String, String>> rows = expectedOutputTable.asMaps();
-
-        for (Map<String, String> expectedRow : rows) {
-            String expectedLocation = expectedRow.get("name");
-            String expectedChargerId = expectedRow.get("Charger ID");
-            String expectedType = expectedRow.get("Type");
-            String expectedStatus = expectedRow.get("Status");
-
-            LocationData locationData = location.getLocationByName(expectedLocation).orElse(null);
-            assertNotNull(locationData, "Location " + expectedLocation + " should exist");
-
-            List<Charger> chargers = locationData.getChargers();
-            boolean found = false;
-            for (Charger charger : chargers) {
-                if (charger.getChargerId().equals(expectedChargerId)) {
-                    assertEquals(Type.valueOf(expectedType), charger.getType(), "Charger type mismatch");
-                    assertEquals(Status.valueOf(expectedStatus), charger.getStatus(), "Charger status mismatch");
-                    found = true;
-                    break;
-                }
+    @Given("the following locations with chargers exist:")
+    public void the_following_locations_with_chargers_exist(List<Map<String, String>> locationData) {
+        for (Map<String, String> data : locationData) {
+            List<Charger> chargers = new ArrayList<>();
+            if (data.get("Charger1") != null && !data.get("Charger1").isEmpty()) {
+                chargers.add(new Charger(data.get("Charger1"), ChargerType.valueOf(data.get("Type-1")), ChargerStatus.valueOf(data.get("Status-1"))));
             }
-            assertTrue(found, "Charger with ID " + expectedChargerId + " should be found at location " + expectedLocation);
+            if (data.get("Charger2") != null && !data.get("Charger2").isEmpty()) {
+                chargers.add(new Charger(data.get("Charger2"), ChargerType.valueOf(data.get("Type-2")), ChargerStatus.valueOf(data.get("Status-2"))));
+            }
+            if (data.get("Charger3") != null && !data.get("Charger3").isEmpty()) {
+                chargers.add(new Charger(data.get("Charger3"), ChargerType.valueOf(data.get("Type-3")), ChargerStatus.valueOf(data.get("Status-3"))));
+            }
+
+            ecs.addLocationWithChargers(
+                    data.get("name"),
+                    data.get("address"),
+                    Double.parseDouble(data.get("PricePerACkwH")),
+                    Double.parseDouble(data.get("PricePerDCkwH")),
+                    Double.parseDouble(data.get("PriceACMinute")),
+                    Double.parseDouble(data.get("PriceDCMinute")),
+                    chargers
+            );
         }
     }
-}
 
+    @When("I display all locations with chargers")
+    public void i_display_all_locations_with_chargers() {
+        displayOutput = captureConsoleOutput(() -> locationMonitoring.displayAllLocationsWithChargers());
+    }
+
+    @Then("I should see the following locations with their chargers:")
+    public void i_should_see_the_following_locations_with_their_chargers(List<Map<String, String>> expectedChargers) {
+        for (Map<String, String> chargerData : expectedChargers) {
+            String chargerId = chargerData.get("Charger ID");
+            String locationName = chargerData.get("Location");
+            String expectedOutput = "Charger ID: " + chargerId + ", Type: " + chargerData.get("Type")
+                    + ", Status: " + chargerData.get("Status");
+            assertTrue(displayOutput.contains(expectedOutput));
+        }
+    }
+
+    private String captureConsoleOutput(Runnable runnable) {
+
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        PrintStream originalOut = System.out;
+        System.setOut(new PrintStream(baos));
+        runnable.run();
+        System.setOut(originalOut);
+        return baos.toString();
+    }
+
+    @When("I display available chargers at location {string}")
+    public void iDisplayAllLocationsWithAvailableChargers(String location) {
+        displayOutput = captureConsoleOutput(() -> locationMonitoring.displayAvailableChargers(location));
+    }
+
+}

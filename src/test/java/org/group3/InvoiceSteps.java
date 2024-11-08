@@ -1,48 +1,82 @@
 package org.group3;
 
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
 import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class InvoiceSteps {
 
-    private Invoice userInvoice;
+    private ECS ecs;
+    private Invoice invoice;
+    private UserAccount userAccount;
+    private double totalCost;
+    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm");
 
-    @Then("user {string} requests an invoice")
-    public void userRequestsInvoice(String username) {
-        userInvoice = new Invoice(username);
-        userInvoice.printUserInvoice();
+    @Before
+    public void setUp() {
+        ecs = new ECS();
     }
 
-    @Then("the total invoice amount for user {string} should be €{double}")
-    public void totalInvoiceAmountShouldBe(String username, double expectedAmount) {
-        userInvoice = new Invoice(username);
-        double totalCost = userInvoice.calculateTotalCost();
+    @Given("a user {string} with email {string} and balance {double} has 5 charging sessions:")
+    public void a_user_with_email_has_charging_sessions(String username, String email, double balance, List<Map<String, String>> sessionData) {
 
-        assertEquals(expectedAmount, totalCost, 0.01);
-    }
+        userAccount = new UserAccount(username, email);
+        userAccount.addFunds(balance);
+        ecs.addUser(userAccount);
 
-    @Then("the invoice for user {string} should list the following sessions in order:")
-    public void invoiceShouldListSessionsInOrder(String username, io.cucumber.datatable.DataTable expectedSessionsTable) {
-        userInvoice = new Invoice(username);
-        List<ChargingSession> actualSessions = userInvoice.getUserSessions();
+        for (Map<String, String> sessionRow : sessionData) {
+            String locationName = sessionRow.get("Location");
+            String chargerId = sessionRow.get("ChargerID");
+            LocalDateTime startTime = LocalDateTime.parse(sessionRow.get("Start Time"));
+            LocalDateTime endTime = LocalDateTime.parse(sessionRow.get("End Time"));
+            double powerConsumed = Double.parseDouble(sessionRow.get("Power Consumed"));
 
-        List<Map<String, String>> expectedSessions = expectedSessionsTable.asMaps();
-        assertEquals(expectedSessions.size(), actualSessions.size(), "Number of sessions should match");
-
-        for (int i = 0; i < expectedSessions.size(); i++) {
-            Map<String, String> expected = expectedSessions.get(i);
-            ChargingSession actual = actualSessions.get(i);
-
-            assertEquals(expected.get("location"), actual.getLocationName(), "Location should match");
-            assertEquals(expected.get("chargerId"), actual.getCharger().getChargerId(), "Charger ID should match");
-            assertEquals(expected.get("chargerType"), actual.getChargerType().name(), "Charger Type should match");
-            assertEquals(expected.get("startTime"), actual.getStartTime().toString(), "Start Time should match");
-
+            ecs.createChargingSession(email, locationName, chargerId, startTime, powerConsumed);
+            ecs.endChargingSession(email, endTime);
         }
+    }
+
+    @When("the user views the invoice")
+    public void the_user_views_the_invoice() {
+
+        invoice = new Invoice(userAccount.getEmail(), ecs);
+    }
+
+    @Then("the invoice should display:")
+    public void the_invoice_should_display(List<Map<String, String>> expectedInvoiceData) {
+        List<ChargingSession> sessions = invoice.getUserSessions();
+        assertEquals(expectedInvoiceData.size(), sessions.size());
+
+        for (int i = 0; i < sessions.size(); i++) {
+            ChargingSession session = sessions.get(i);
+            Map<String, String> expectedData = expectedInvoiceData.get(i);
+
+            assertEquals(expectedData.get("Location"), session.getLocation().getName());
+            assertEquals(expectedData.get("ChargerID"), session.getCharger().getChargerId());
+
+            // Zeitformatierung prüfen
+            assertEquals(expectedData.get("Start Time"), session.getStartTime().format(formatter));
+            assertEquals(expectedData.get("End Time"), session.getEndTime().format(formatter));
+
+            assertEquals(Long.parseLong(expectedData.get("Duration (minutes)")), session.getDuration().toMinutes());
+            assertEquals(Double.parseDouble(expectedData.get("Power Consumed")), session.getPowerConsumed(), 0.01);
+            assertEquals(Double.parseDouble(expectedData.get("Total Cost (€)")), session.getTotalCost(), 0.01);
+            assertEquals(Double.parseDouble(expectedData.get("Balance after charging (€)")), session.getBalanceAfterCharging(), 0.01);
+        }
+    }
+
+    @Then("the total amount due should be {string}")
+    public void the_total_amount_due_should_be(String expectedTotal) {
+        double actualTotal = invoice.calculateTotalCost();
+        assertEquals(Double.parseDouble(expectedTotal), actualTotal, 0.01);
     }
 
 }

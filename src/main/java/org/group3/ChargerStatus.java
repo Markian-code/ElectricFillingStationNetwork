@@ -1,5 +1,5 @@
 package org.group3;
 
-public enum Status {
+public enum ChargerStatus {
     FREI, BESETZT, AUSSER_BETRIEB
 }
