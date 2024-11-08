@@ -4,8 +4,8 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.group3</groupId>
-    <artifactId>ElectricFillingStationNetwork-1</artifactId>
+    <groupId>org.groupe3</groupId>
+    <artifactId>ElectricFillingStationNetwork</artifactId>
     <version>1.0-SNAPSHOT</version>
     <packaging>jar</packaging>
 
@@ -31,6 +31,7 @@
             </dependency>
         </dependencies>
     </dependencyManagement>
+
 
     <dependencies>
         <dependency>
@@ -66,8 +67,8 @@
                 <version>3.13.0</version>
                 <configuration>
                     <encoding>UTF-8</encoding>
-                    <source>14</source>
-                    <target>14</target>
+                    <source>17</source>
+                    <target>17</target>
                 </configuration>
             </plugin>
             <plugin>

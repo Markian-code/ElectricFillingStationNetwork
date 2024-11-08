@@ -1,48 +1,73 @@
 package org.group3;
 
 import java.util.List;
-import java.util.Map;
 
 public class LocationMonitoring {
 
-    private Location location;
+    private ECS ecs;
 
-    public LocationMonitoring(Location location) {
-        this.location = location;
+    public LocationMonitoring(ECS ecs) {
+        this.ecs = ecs;
     }
 
     public void displayAllLocationsWithChargers() {
-        Map<String, LocationData> locationsMap = location.getAllLocations();
+        List<Location> locations = ecs.getAllLocations();
 
-        if (locationsMap.isEmpty()) {
+        if (locations.isEmpty()) {
             System.out.println("No locations found");
             return;
         }
 
-        for (Map.Entry<String, LocationData> entry : locationsMap.entrySet()) {
-            String locationName = entry.getKey();
-            LocationData locationData = entry.getValue();
 
-            System.out.println("Location: " + locationName);
-            System.out.println("Address: " + locationData.getAddress());
-            System.out.println("AC price per kWh: " + locationData.getPricePerACkwH());
-            System.out.println("DC price per kWh: " + locationData.getPricePerDCkwH());
-            System.out.println("AC price per Minute: " + locationData.getPriceACMinute());
-            System.out.println("DC price per Minute: " + locationData.getPriceDCMinute());
+        for (Location location : locations) {
+            System.out.println("Location: " + location.getName());
+            System.out.println("Address: " + location.getAddress());
+            System.out.println("AC price per kWh: " + location.getPricePerACkwH());
+            System.out.println("DC price per kWh: " + location.getPricePerDCkwH());
+            System.out.println("AC price per Minute: " + location.getPriceACMinute());
+            System.out.println("DC price per Minute: " + location.getPriceDCMinute());
 
-            List<Charger> chargers = locationData.getChargers();
+            List<Charger> chargers = location.getChargers();
             if (chargers.isEmpty()) {
-                System.out.println("No chargers found");
+                System.out.println("No chargers found at this location");
             } else {
-                System.out.println("Available chargers:");
+                System.out.println("All chargers at location:");
                 for (Charger charger : chargers) {
                     System.out.println("    Charger ID: " + charger.getChargerId() +
-                            ", Typ: " + charger.getType() +
+                            ", Type: " + charger.getType() +
                             ", Status: " + charger.getStatus());
                 }
             }
             System.out.println("-----------------------------------");
         }
     }
-}
 
+
+    public void displayChargerStatus(String locationName, String chargerId) {
+        Location location = ecs.getLocation(locationName)
+                .orElseThrow(() -> new IllegalArgumentException("Location '" + locationName + "' not found"));
+
+
+        Charger charger = location.getChargerById(chargerId)
+                .orElseThrow(() -> new IllegalArgumentException("Charger with ID '" + chargerId + "' not found at location '" + locationName + "'"));
+
+
+        System.out.println("Charger ID: " + charger.getChargerId());
+        System.out.println("Type: " + charger.getType());
+        System.out.println("Status: " + charger.getStatus());
+    }
+
+
+    public void displayAvailableChargers(String locationName) {
+        Location location = ecs.getLocation(locationName)
+                .orElseThrow(() -> new IllegalArgumentException("Location '" + locationName + "' not found"));
+
+        List<Charger> chargers = location.getChargers();
+        System.out.println("Available chargers at " + locationName + ":");
+        for (Charger charger : chargers) {
+            if (charger.getStatus() == ChargerStatus.FREI) {
+                System.out.println("  Charger ID: " + charger.getChargerId() + ", Type: " + charger.getType()+ ", Status: " + charger.getStatus());
+            }
+        }
+    }
+}

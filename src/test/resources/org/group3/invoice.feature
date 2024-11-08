@@ -1,24 +1,38 @@
-Feature: Invoice
-  As owner
-  the system should monitor all charging session of clients
-  so that i can bill them correctly
+Feature: User views invoice for charging sessions
 
-  Scenario: User requests an invoice sorted by start time
-    Given the following location exists:
-      | name            | address                    | pricePerACkwH | pricePerDCkwH | priceACMinute | priceDCMinute |
-      | Salzburg Hbf    | Hauptbahnhof 4, Salzburg   | 0.30          | 0.40          | 0.10          | 0.15          |
-      | Innsbruck Hbf   | Hauptbahnhof 7, Innsbruck  | 0.25          | 0.35          | 0.12          | 0.18          |
-    And the following charger exists:
-      | ID        | Type  | Status   |
-      | CHARGER-1 | AC    | FREI     |
-      | CHARGER-2 | DC    | FREI     |
-    And user "john_doe" starts a charging session at "2024-10-21-10-15" at "Salzburg Hbf" using charger "CHARGER-1" with 15.0 kWh
-    And the session lasts 45 minutes
-    And user "john_doe" starts a charging session at "2024-10-22-09-00" at "Innsbruck Hbf" using charger "CHARGER-2" with 10.0 kWh
-    And the session lasts 30 minutes
-    Then user "john_doe" requests an invoice
-    Then the invoice for user "john_doe" should list the following sessions in order:
-      | location         | chargerId     | chargerType | startTime           |
-      | Salzburg Hbf     | CHARGER-1     | AC          | 2024-10-21T10:15    |
-      | Innsbruck Hbf    | CHARGER-2     | DC          | 2024-10-22T09:00    |
-    Then the total invoice amount for user "john_doe" should be €17.90
+
+  Background:
+    Given the following locations exist:
+      | name                | address               | PricePerACkwH | PricePerDCkwH | PriceACMinute | PriceDCMinute |
+      | Wien Hauptbahnhof   | Hauptbahnhof 11, Wien | 0.10          | 0.15          | 0.05          | 0.10          |
+      | Graz Operngasse     | Operngasse 4, Graz    | 0.18          | 0.20          | 0.12          | 0.15          |
+
+    And the following chargers exist at each location:
+      | Location             | ChargerID | Type | Status |
+      | Wien Hauptbahnhof    | CHARGER-1 | AC   | FREI   |
+      | Wien Hauptbahnhof    | CHARGER-2 | DC   | FREI   |
+      | Graz Operngasse      | CHARGER-3 | AC   | FREI   |
+      | Graz Operngasse      | CHARGER-4 | DC   | FREI   |
+
+
+  Scenario: User views invoice after 5 charging sessions
+
+    Given a user "Michael" with email "michael@example.com" and balance 100 has 5 charging sessions:
+      | Location             | ChargerID | Start Time          | End Time            | Power Consumed |
+      | Wien Hauptbahnhof    | CHARGER-1 | 2024-11-01T10:00:00 | 2024-11-01T10:30:00 | 10.0           |
+      | Wien Hauptbahnhof    | CHARGER-2 | 2024-11-02T14:00:00 | 2024-11-02T14:40:00 | 15.0           |
+      | Graz Operngasse      | CHARGER-3 | 2024-11-03T16:00:00 | 2024-11-03T16:45:00 | 5.0            |
+      | Graz Operngasse      | CHARGER-4 | 2024-11-04T11:00:00 | 2024-11-04T11:50:00 | 8.0            |
+      | Wien Hauptbahnhof    | CHARGER-1 | 2024-11-05T09:00:00 | 2024-11-05T09:20:00 | 12.0           |
+
+    When the user views the invoice
+
+    Then the invoice should display:
+      | Location             | ChargerID | Start Time          | End Time            | Duration (minutes)  | Power Consumed | Total Cost (€) |Balance after charging (€) |
+      | Wien Hauptbahnhof    | CHARGER-1 | 2024-11-01T10:00    | 2024-11-01T10:30    | 30                  | 10.0           | 2.50           |  97.5                     |
+      | Wien Hauptbahnhof    | CHARGER-2 | 2024-11-02T14:00    | 2024-11-02T14:40    | 40                  | 15.0           | 6.25           |  91.25                    |
+      | Graz Operngasse      | CHARGER-3 | 2024-11-03T16:00    | 2024-11-03T16:45    | 45                  | 5.0            | 6.30           |  84.95                    |
+      | Graz Operngasse      | CHARGER-4 | 2024-11-04T11:00    | 2024-11-04T11:50    | 50                  | 8.0            | 9.10           |  75.85                    |
+      | Wien Hauptbahnhof    | CHARGER-1 | 2024-11-05T09:00    | 2024-11-05T09:20    | 20                  | 12.0           | 2.20           |  73.65                    |
+
+    And the total amount due should be "26.35"

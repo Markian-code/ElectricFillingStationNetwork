@@ -1,5 +1,5 @@
 package org.group3;
 
-public enum Type {
+public enum ChargerType {
     AC, DC
 }
