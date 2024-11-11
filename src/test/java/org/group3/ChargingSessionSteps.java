@@ -16,76 +16,59 @@ public class ChargingSessionSteps {
 
     private ECS ecs;
     private String errorMessage;
-    private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
-    private UserAccount userAccount;
+    private final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm");
 
     @Before
     public void setUp() {
         ecs = new ECS();
     }
 
-    @Given("user {string} with email {string} and prepaid balance of {double} exists")
-    public void userIsRegistered(String username, String email, double balance) {
-        userAccount = new UserAccount(username, email);
-        userAccount.addFunds(balance);
+    @Given("user {string} with email {string} and prepaid balance of {double} added at {string} exists")
+    public void userWithPrepaidBalanceAndTimestampExists(String name, String email, double balance, String timestamp) {
+        LocalDateTime addedAt = LocalDateTime.parse(timestamp, formatter);
+        UserAccount userAccount = new UserAccount(name, email);
+        userAccount.addLedgerEntry(LedgerType.TOP_UP, balance, addedAt); // Guthaben mit Zeitstempel hinzufügen
         ecs.addUser(userAccount);
-
     }
-
 
     @When("user with email {string} starts a charging session at {string} with charger {string} consuming {double} kWh at {string}")
     public void userStartsChargingSession(String email, String locationName, String chargerId, double powerConsumed, String startTime) {
-        try {
-            LocalDateTime start = LocalDateTime.parse(startTime, formatter);
-            ecs.createChargingSession(email, locationName, chargerId, start, powerConsumed);
-        } catch (IllegalArgumentException e) {
-            errorMessage = e.getMessage();
-        }
+        LocalDateTime start = LocalDateTime.parse(startTime, formatter);
+        ecs.createChargingSession(email, locationName, chargerId, start, powerConsumed);
     }
-
 
     @And("user with email {string} stops the charging session at {string}")
     public void userStopsChargingSession(String email, String endTime) {
-        try {
-            LocalDateTime end = LocalDateTime.parse(endTime, formatter);
-            ecs.endChargingSession(email, end);
-        } catch (IllegalArgumentException e) {
-            errorMessage = e.getMessage();
-        }
+        LocalDateTime end = LocalDateTime.parse(endTime, formatter);
+        ecs.endChargingSession(email, end);
     }
-
 
     @Then("the total charging time for user with email {string} is {int} minutes")
     public void theTotalChargingTimeForUserIs(String email, int expectedMinutes) {
         List<ChargingSession> sessions = ecs.getChargingSessionsByUser(email);
         assertFalse(sessions.isEmpty(), "No charging session found for user " + email);
-        ChargingSession session = sessions.get(sessions.size() - 1); // Letzte Sitzung des Benutzers
+        ChargingSession session = sessions.get(sessions.size() - 1);
 
         assertTrue(session.isSessionEnded(), "Charging session has not ended.");
         assertEquals(expectedMinutes, session.getDuration().toMinutes(), "Charging duration does not match.");
     }
 
-
     @And("the total cost for user with email {string} is €{double}")
     public void theTotalCostForUserIs(String email, double expectedCost) {
-        List<ChargingSession> sessions = ecs.getChargingSessionsByUser(email);
-        assertFalse(sessions.isEmpty(), "No charging session found for user " + email);
-        ChargingSession session = sessions.get(sessions.size() - 1);
-
-        assertTrue(session.isSessionEnded(), "Charging session has not ended.");
-        assertEquals(expectedCost, session.getTotalCost(), 0.01, "Charging cost does not match.");
+        Invoice invoice = new Invoice(email, ecs);
+        double actualCost = invoice.calculateTotalCost();
+        assertEquals(expectedCost, actualCost, 0.01, "Total cost does not match.");
     }
 
     @And("the new balance for user with email {string} should be {double}")
     public void theUserSBalanceShouldBe(String email, double expectedBalance) {
-        UserAccount actualUserAccount = ecs.getUserByEmail(email)
+        UserAccount userAccount = ecs.getUserByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("User with email '" + email + "' not found"));
-        assertEquals(expectedBalance, actualUserAccount.getBalance(), 0.01);
+        assertEquals(expectedBalance, userAccount.getBalance(), 0.01, "New balance does not match.");
     }
 
 
-
-    //Error-Cases------------------------
+//Error-Cases------------------------
 
     @When("user with email {string} tries to calculate the total cost")
     public void userTriesToCalculateTheTotalCost(String username) {
@@ -108,7 +91,6 @@ public class ChargingSessionSteps {
     public void anErrorMessageBeDisplayedSaying(String expectedErrorMessage) {
         assertEquals(expectedErrorMessage, errorMessage);
     }
-
 
 
 }

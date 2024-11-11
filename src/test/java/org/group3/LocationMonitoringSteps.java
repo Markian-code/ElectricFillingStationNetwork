@@ -18,8 +18,6 @@ public class LocationMonitoringSteps {
     private LocationMonitoring locationMonitoring = new LocationMonitoring(ecs);
     private String displayOutput;
 
-
-
     @Given("the following locations with chargers exist:")
     public void the_following_locations_with_chargers_exist(List<Map<String, String>> locationData) {
         for (Map<String, String> data : locationData) {
@@ -45,6 +43,7 @@ public class LocationMonitoringSteps {
             );
         }
     }
+
 
     @When("I display all locations with chargers")
     public void i_display_all_locations_with_chargers() {

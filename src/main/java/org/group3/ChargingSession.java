@@ -31,11 +31,12 @@ public class ChargingSession {
             throw new IllegalStateException("Session has already been completed.");
         }
         this.endTime = endTime;
-        this.sessionState = SessionState.COMPLETED; // Status ändern
-        calculateTotalCost();
+        this.sessionState = SessionState.COMPLETED;
 
-        userAccount.deductBalance(totalCost);
-        this.balanceAfterCharging = userAccount.getBalance();
+        calculateTotalCost(); // Gesamtkosten berechnen (bestehende Methode)
+
+        // Hinzufügen eines Ledger-Eintrags statt Balance-Abzug
+        userAccount.addLedgerEntry(LedgerType.CHARGING_SESSION, totalCost, startTime);
     }
 
     public Duration getDuration() {
