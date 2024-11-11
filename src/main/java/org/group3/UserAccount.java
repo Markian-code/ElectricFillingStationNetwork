@@ -1,18 +1,21 @@
 package org.group3;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 public class UserAccount {
     private final String userId;
     private String name;
     private String email;
-    private double prepaidBalance;
+    private final List<LedgerEntry> ledger;
 
     public UserAccount(String name, String email) {
         this.userId = UUID.randomUUID().toString();
         this.name = name;
         this.email = email;
-        this.prepaidBalance = 0.0;
+        this.ledger = new ArrayList<>();
     }
 
 
@@ -39,27 +42,42 @@ public class UserAccount {
         this.email = email;
     }
 
-    public double getPrepaidBalance() {
-        return prepaidBalance;
+    public void addLedgerEntry(LedgerType type, double amount, LocalDateTime timestamp) {
+        ledger.add(new LedgerEntry(type, amount, timestamp));
+    }
+
+    public void addLedgerEntry(LedgerType type, double amount) {
+        ledger.add(new LedgerEntry(type, amount, LocalDateTime.now())); // Automatischer Timestamp
+    }
+
+    public List<LedgerEntry> getLedger() {
+        return new ArrayList<>(ledger);
+    }
+
+    public void addFunds(double amount, LocalDateTime timestamp) {
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero.");
+        }
+        // Fügt eine TOP_UP-Transaktion zum Ledger hinzu
+        addLedgerEntry(LedgerType.TOP_UP, amount, timestamp);
     }
 
     public void addFunds(double amount) {
-        if (amount < 0) {
-            throw new IllegalArgumentException("Amount must be positive");
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Amount must be greater than zero.");
         }
-        this.prepaidBalance += amount;
-    }
-
-    public void deductBalance(double amount) {
-        if (amount > 0 && amount <= prepaidBalance) {
-            this.prepaidBalance -= amount;
-        } else {
-            throw new IllegalStateException("Insufficient funds.");
-        }
+        // Fügt eine TOP_UP-Transaktion zum Ledger hinzu
+        addLedgerEntry(LedgerType.TOP_UP, amount);
     }
 
     public double getBalance() {
-        return prepaidBalance;
+        return ledger.stream()
+                .mapToDouble(entry -> entry.getType() == LedgerType.TOP_UP ? entry.getAmount() : -entry.getAmount())
+                .sum();
+    }
+
+    public double getPrepaidBalance() {
+        return getBalance();
     }
 
     private boolean isValidEmail(String email) {

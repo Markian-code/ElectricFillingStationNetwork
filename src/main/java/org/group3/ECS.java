@@ -6,10 +6,8 @@ import java.util.stream.Collectors;
 
 public class ECS {
     private static final List<Location> locations = new ArrayList<>();
-    //private static final List<UserAccount> USER_ACCOUNTS = new ArrayList<>();
     private static final List<ChargingSession> chargingSessions = new ArrayList<>();
     private static final Map<String, UserAccount> usersAccounts = new HashMap<>();
-
 
 
     // ------- Location Management -------
@@ -170,7 +168,16 @@ public class ECS {
         if (user == null) {
             throw new IllegalArgumentException("User with email " + email + " does not exist.");
         }
-        user.addFunds(amount);
+        user.addFunds(amount); // Automatisch LocalDateTime.now()
+        return true;
+    }
+
+    public boolean addFundsToUser(String email, double amount, LocalDateTime timestamp) {
+        UserAccount user = usersAccounts.get(email);
+        if (user == null) {
+            throw new IllegalArgumentException("User with email " + email + " does not exist.");
+        }
+        user.addFunds(amount, timestamp);
         return true;
     }
 

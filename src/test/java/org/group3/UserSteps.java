@@ -13,24 +13,23 @@ import static org.junit.jupiter.api.Assertions.*;
 
 public class UserSteps {
 
-    private ECS ecs = new ECS();
-    private boolean operationResult;
-
+    private ECS ecs;
+    private boolean operationResult; // Für Rückgabewerte von Operationen wie "addFundsToUser"
 
     @Before
     public void setup() {
-        // Initialisiere die Benutzer nur einmal
+        // Initialisiere ECS und Benutzer vor jedem Szenario
         ecs = new ECS();
     }
-
 
     @Given("the following users exist:")
     public void the_following_users_exist(List<Map<String, String>> users) {
         for (Map<String, String> userData : users) {
             String email = userData.get("email");
-            if (ecs.getUserByEmail(email).isEmpty()) { // Prüfe, ob Benutzer bereits existiert
+            if (ecs.getUserByEmail(email).isEmpty()) { // Benutzer hinzufügen, falls noch nicht vorhanden
                 UserAccount userAccount = new UserAccount(userData.get("name"), email);
-                userAccount.addFunds(Double.parseDouble(userData.get("prepaidBalance")));
+                double prepaidBalance = Double.parseDouble(userData.get("prepaidBalance"));
+                userAccount.addFunds(prepaidBalance); // Prepaid-Balance setzen
                 ecs.addUser(userAccount);
             }
         }
@@ -43,12 +42,13 @@ public class UserSteps {
 
     @Then("the user {string} with mail {string} should be in the system")
     public void the_user_should_be_in_the_system(String name, String email) {
-        assertTrue(ecs.getUserByEmail(email).isPresent());
+        assertTrue(ecs.getUserByEmail(email).isPresent(), "User is not in the system");
+        assertEquals(name, ecs.getUserByEmail(email).get().getName(), "User name does not match");
     }
 
     @Then("the total number of users should be {int}")
     public void the_total_number_of_users_should_be(Integer totalUsers) {
-        assertEquals(totalUsers.intValue(), ecs.getNumberOfUsers());
+        assertEquals(totalUsers.intValue(), ecs.getNumberOfUsers(), "Total number of users does not match");
     }
 
     @When("I remove the user Charlie with email {string}")
@@ -58,7 +58,7 @@ public class UserSteps {
 
     @Then("the user with email {string} should not be in the system")
     public void the_user_with_email_should_not_be_in_the_system(String email) {
-        assertFalse(ecs.getUserByEmail(email).isPresent());
+        assertFalse(ecs.getUserByEmail(email).isPresent(), "User is still in the system");
     }
 
     @When("I update user {string} and email {string} to have new name {string} and email {string}")
@@ -74,10 +74,10 @@ public class UserSteps {
 
     @Then("the user should now have name {string} and their email should be {string}")
     public void the_user_should_now_have_name(String newName, String email) {
-        assertTrue(ecs.getUserByEmail(email).isPresent());
-        assertEquals(newName, ecs.getUserByEmail(email).get().getName());
+        Optional<UserAccount> userOptional = ecs.getUserByEmail(email);
+        assertTrue(userOptional.isPresent(), "User with updated email is not in the system");
+        assertEquals(newName, userOptional.get().getName(), "User name does not match the updated value");
     }
-
 
     @When("I add {double} to my user account with email {string}")
     public void i_add_to_the_user_with_name_and_email(Double amount, String email) {
@@ -86,8 +86,9 @@ public class UserSteps {
 
     @Then("the user {string} with email {string} should have a prepaid balance of {double}")
     public void the_user_should_have_a_prepaid_balance_of(String name, String email, Double expectedBalance) {
-        assertTrue(ecs.getUserByEmail(email).isPresent());
-        assertEquals(expectedBalance, ecs.getUserByEmail(email).get().getPrepaidBalance(), 0.01);
+        Optional<UserAccount> userOptional = ecs.getUserByEmail(email);
+        assertTrue(userOptional.isPresent(), "User is not in the system");
+        assertEquals(expectedBalance, userOptional.get().getPrepaidBalance(), 0.01, "User prepaid balance does not match");
     }
 
 }
