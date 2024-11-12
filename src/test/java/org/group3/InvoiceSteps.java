@@ -21,7 +21,7 @@ public class InvoiceSteps {
         ecs = new ECS();
     }
 
-    @Given("user {string} with email {string} and the following top-ups exist:")
+    @Given("user {string} with email {string} and the following top-ups:")
     public void userWithTopUpsExists(String name, String email, List<Map<String, String>> topUps) {
         UserAccount userAccount = new UserAccount(name, email);
         currentUserEmail = email;
@@ -34,7 +34,7 @@ public class InvoiceSteps {
         }
     }
 
-    @And("the user has the following charging sessions:")
+    @And("has the following charging sessions:")
     public void userHasChargingSessions(List<Map<String, String>> sessions) {
         for (Map<String, String> session : sessions) {
             String locationName = session.get("location");
@@ -49,13 +49,13 @@ public class InvoiceSteps {
         }
     }
 
-    @When("the user views the combined ledger")
+    @When("user views the detailed invoice")
     public void the_user_views_the_combined_ledger() {
         Invoice invoice = new Invoice(currentUserEmail, ecs);
         ledgerLines = invoice.createDetailedUserInvoice();
     }
 
-    @Then("the ledger should display:")
+    @Then("the invoice shows:")
     public void the_ledger_should_display(List<Map<String, String>> expectedLedger) {
         assertEquals(expectedLedger.size(), ledgerLines.size(), "Anzahl der Ledger-Einträge stimmt nicht überein.");
 

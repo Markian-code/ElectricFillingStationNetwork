@@ -70,7 +70,7 @@ public class ChargingSessionSteps {
 
 //Error-Cases------------------------
 
-    @When("user with email {string} tries to calculate the total cost")
+    @When("user with email {string} wants to view the total cost")
     public void userTriesToCalculateTheTotalCost(String username) {
         try {
             ChargingSession activeSession = ecs.getChargingSessionsByUser(username).stream()

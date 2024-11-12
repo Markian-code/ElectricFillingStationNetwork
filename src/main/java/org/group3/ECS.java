@@ -126,7 +126,7 @@ public class ECS {
 
 
 
-    // ------- UserAccounts Management -------
+    // ------- UserAccount Management -------
 
     public void addUser(UserAccount user) {
         if (usersAccounts.containsKey(user.getEmail())) {
@@ -186,7 +186,7 @@ public class ECS {
     }
 
 
-// ------- Charging Session Management -------
+// ------- Charging Session  -------
 
     public void createChargingSession(String userEmail, String locationName, String chargerId, LocalDateTime startTime, double powerConsumed) {
         Location location = getLocation(locationName)
