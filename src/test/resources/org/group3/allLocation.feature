@@ -1,6 +1,6 @@
 Feature: Location and Charger Management
 
-  As the owner of the electric filling station network,
+  As owner
   I want to administer and manage the locations,
   So that clients can access and use the charging network.
 

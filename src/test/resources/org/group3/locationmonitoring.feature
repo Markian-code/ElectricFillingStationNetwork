@@ -19,10 +19,10 @@ Background:
     | St. Poelten Rathausplatz | Rathausplatz 3, St. Poelten | 0.16          | 0.21          | 0.10          | 0.16          | CHARGER-13  | AC     | FREI          | CHARGER-14  | DC     | BESETZT   |             |        |               |
 
 
-  Scenario: Display locations and all chargers
+  Scenario: Display all locations
 
-    When I display all locations with chargers
-    Then I should see the following locations with their chargers:
+    When owner or user views all locations with chargers
+    Then they see the following locations with their chargers:
       | Location                 | Address                     | AC price per kWh | DC price per kWh | AC price per Minute | DC price per Minute | Charger ID | Type | Status        |
       | Wien Hauptbahnhof        | Hauptbahnhof 11, Wien       | 0.10              | 0.15             | 0.05                | 0.10                 | CHARGER-1  | AC   | FREI          |
       | Wien Hauptbahnhof        | Hauptbahnhof 11, Wien       | 0.1              | 0.15             | 0.05                | 0.1                 | CHARGER-2  | DC   | BESETZT       |
@@ -39,10 +39,10 @@ Background:
       | St. Poelten Rathausplatz | Rathausplatz 3, St. Poelten | 0.16             | 0.21             | 0.1                 | 0.16                | CHARGER-13 | AC   | FREI          |
       | St. Poelten Rathausplatz | Rathausplatz 3, St. Poelten | 0.16             | 0.21             | 0.1                 | 0.16                | CHARGER-14 | DC   | BESETZT       |
 
-  Scenario: Display locations with available chargers
+  Scenario: Display available chargers at location
 
-    When I display available chargers at location "Wien Hauptbahnhof"
-    Then I should see the following locations with their chargers:
+    When owner or user views available chargers at location "Wien Hauptbahnhof"
+    Then they see the following locations with their chargers:
       | Location                 | Address                     | AC price per kWh | DC price per kWh | AC price per Minute | DC price per Minute | Charger ID | Type | Status        |
       | Wien Hauptbahnhof        | Hauptbahnhof 11, Wien       | 0.10             | 0.15             | 0.05                | 0.10                | CHARGER-1  | AC   | FREI          |
 

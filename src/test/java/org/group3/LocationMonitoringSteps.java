@@ -45,12 +45,12 @@ public class LocationMonitoringSteps {
     }
 
 
-    @When("I display all locations with chargers")
+    @When("owner or user views all locations with chargers")
     public void i_display_all_locations_with_chargers() {
         displayOutput = captureConsoleOutput(() -> locationMonitoring.displayAllLocationsWithChargers());
     }
 
-    @Then("I should see the following locations with their chargers:")
+    @Then("they see the following locations with their chargers:")
     public void i_should_see_the_following_locations_with_their_chargers(List<Map<String, String>> expectedChargers) {
         for (Map<String, String> chargerData : expectedChargers) {
             String chargerId = chargerData.get("Charger ID");
@@ -71,7 +71,7 @@ public class LocationMonitoringSteps {
         return baos.toString();
     }
 
-    @When("I display available chargers at location {string}")
+    @When("owner or user views available chargers at location {string}")
     public void iDisplayAllLocationsWithAvailableChargers(String location) {
         displayOutput = captureConsoleOutput(() -> locationMonitoring.displayAvailableChargers(location));
     }
