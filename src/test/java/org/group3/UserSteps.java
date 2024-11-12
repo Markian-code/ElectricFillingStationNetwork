@@ -35,7 +35,7 @@ public class UserSteps {
         }
     }
 
-    @When("I add a user with name {string} and email {string}")
+    @When("the user adds a user with name {string} and email {string}")
     public void i_add_a_user_with_name_and_email(String name, String email) {
         ecs.addUser(new UserAccount(name, email));
     }
@@ -51,7 +51,7 @@ public class UserSteps {
         assertEquals(totalUsers.intValue(), ecs.getNumberOfUsers(), "Total number of users does not match");
     }
 
-    @When("I remove the user Charlie with email {string}")
+    @When("the user Charlie with email {string} is removed")
     public void i_remove_the_user_with_email(String email) {
         ecs.removeUserByEmail(email);
     }
@@ -61,7 +61,7 @@ public class UserSteps {
         assertFalse(ecs.getUserByEmail(email).isPresent(), "User is still in the system");
     }
 
-    @When("I update user {string} and email {string} to have new name {string} and email {string}")
+    @When("the user {string} with the email {string} updates their account to {string} and email {string}")
     public void i_update_user_and_email_to_have_new_name_and_email(String currentName, String currentEmail, String newName, String newEmail) {
         Optional<UserAccount> userOptional = ecs.getUserByEmail(currentEmail);
 
@@ -79,7 +79,7 @@ public class UserSteps {
         assertEquals(newName, userOptional.get().getName(), "User name does not match the updated value");
     }
 
-    @When("I add {double} to my user account with email {string}")
+    @When("the user adds {double} to their user account with email {string}")
     public void i_add_to_the_user_with_name_and_email(Double amount, String email) {
         ecs.getUserByEmail(email).ifPresent(user -> operationResult = ecs.addFundsToUser(user.getEmail(), amount));
     }

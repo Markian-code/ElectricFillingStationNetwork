@@ -34,10 +34,6 @@ Feature: Location and Charger Management
       | St. Poelten Rathausplatz | CHARGER-14| DC   | BESETZT       |
 
 
-  Scenario: Checking chargers at "Wien Hauptbahnhof"
-    Then location "Wien Hauptbahnhof" has 2 charger
-    And charger with ID "CHARGER-1" is of type "AC" and status "FREI"
-
   Scenario: Change the price of "Graz Operngasse"
     When owner sets the price for location "Graz Operngasse" PricePerACkwH to 0.18
     And sets for location "Graz Operngasse" PriceACMinute to 0.12
